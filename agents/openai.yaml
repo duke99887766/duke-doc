@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke Doc"
+  short_description: "通过对话梳理需求规则与验收标准，输出可交付研发的产品文档"
+  default_prompt: "使用 $duke-doc 梳理以下业务需求，并输出符合团队规范的产品需求文档。"
