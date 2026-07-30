@@ -1,4 +1,0 @@
-interface:
-  display_name: "Duke Doc"
-  short_description: "判断需求价值并评审流程边界、系统影响和验收，输出可交付研发的产品文档"
-  default_prompt: "使用 $duke-doc 判断需求价值与范围，完整评审流程、边界、系统影响和验收后输出规范产品文档。"

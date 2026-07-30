@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke 实现验收"
+  short_description: "对照需求规则与截图、配置、代码和测试证据判断实际落地结果"
+  default_prompt: "使用 $duke-check-implementation 对照需求与实现证据完成验收。"

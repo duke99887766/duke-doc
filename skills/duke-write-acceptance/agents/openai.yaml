@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke 验收标准"
+  short_description: "将已确认的业务规则转换为研发测试可直接执行的验收场景"
+  default_prompt: "使用 $duke-write-acceptance 将需求规则转换为可执行验收标准。"

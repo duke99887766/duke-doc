@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke 文档输出"
+  short_description: "将已确认的结构化需求整理为轻量 Spec、标准文档或完整 PRD"
+  default_prompt: "使用 $duke-write-spec 将已确认需求整理为合适深度的产品文档。"

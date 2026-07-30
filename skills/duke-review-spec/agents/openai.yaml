@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke 文档评审"
+  short_description: "从产品、研发和测试陌生读者视角评审需求文档质量与风险"
+  default_prompt: "使用 $duke-review-spec 评审这份需求文档并指出可执行的修改项。"

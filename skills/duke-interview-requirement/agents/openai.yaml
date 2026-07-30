@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke 需求访谈"
+  short_description: "通过多轮中文对话收敛产品需求的问题、范围、流程和业务规则"
+  default_prompt: "使用 $duke-interview-requirement 将模糊需求梳理为结构化需求包。"
