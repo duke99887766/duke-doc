@@ -1,0 +1,4 @@
+interface:
+  display_name: "网页研究资料入库"
+  short_description: "采集网页资料、区分事实与观点，并生成可追溯的产品研究笔记"
+  default_prompt: "使用 $duke-capture-web-research 采集这个网页并整理为可追溯的产品研究笔记。"

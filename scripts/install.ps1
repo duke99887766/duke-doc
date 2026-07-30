@@ -30,7 +30,8 @@ $skillNames = @(
     'duke-write-acceptance',
     'duke-write-spec',
     'duke-review-spec',
-    'duke-check-implementation'
+    'duke-check-implementation',
+    'duke-capture-web-research'
 )
 
 foreach ($skillName in $skillNames) {

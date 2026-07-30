@@ -1,6 +1,6 @@
 # Duke Doc Skills
 
-面向中文产品需求工作的 Codex Skill 集合，采用“专业 Skill＋编排 Skill”结构。
+面向中文产品需求与产品研究工作的 Codex Skill 集合，采用“专业 Skill＋编排 Skill”结构。
 
 ## Skills
 
@@ -12,6 +12,7 @@
 | `duke-write-spec` | 输出轻量 Spec、标准需求或完整 PRD |
 | `duke-review-spec` | 从产品、研发和测试视角评审文档 |
 | `duke-check-implementation` | 对照需求规则与实现证据完成验收 |
+| `duke-capture-web-research` | 采集网页资料并沉淀可追溯的产品研究笔记 |
 
 ## 使用方式
 
@@ -21,6 +22,7 @@
 - 已有明确需求并需要文档：使用 `$duke-write-spec`。
 - 已有文档并需要评审：使用 `$duke-review-spec`。
 - 已有需求和实现证据：使用 `$duke-check-implementation`。
+- 需要将竞品、行业、规则或技术网页沉淀为研究笔记：使用 `$duke-capture-web-research`。
 
 各 Skill 的 `description` 已定义自动触发边界，日常自然语言请求也可以自动匹配。
 
@@ -32,7 +34,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-脚本会将 `skills` 下的六个 Skill 同步到 `CODEX_HOME\skills`；未设置 `CODEX_HOME` 时使用当前用户的 `.codex\skills`。
+脚本会将 `skills` 下的七个 Skill 同步到 `CODEX_HOME\skills`；未设置 `CODEX_HOME` 时使用当前用户的 `.codex\skills`。
 
 指定其他目录：
 
