@@ -1,0 +1,4 @@
+interface:
+  display_name: "需求原型构建"
+  short_description: "根据已确认需求生成、更新并校验可交互HTML需求原型"
+  default_prompt: "Use $duke-build-requirement-prototype to create or update an HTML prototype from confirmed product requirements."

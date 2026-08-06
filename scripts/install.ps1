@@ -27,6 +27,8 @@ New-Item -ItemType Directory -Path $targetRootFull -Force | Out-Null
 $skillNames = @(
     'duke-doc',
     'duke-interview-requirement',
+    'duke-analyze-requirement-data',
+    'duke-build-requirement-prototype',
     'duke-write-acceptance',
     'duke-write-spec',
     'duke-review-spec',

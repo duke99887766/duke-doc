@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>需求原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #1f2937;
+      background: #f5f7fa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; }
+    button, input, select, textarea { font: inherit; }
+    .page { width: min(1120px, calc(100% - 32px)); margin: 24px auto; }
+    .page-header { margin-bottom: 16px; }
+    .page-title { margin: 0; font-size: 20px; line-height: 28px; }
+    .page-description { margin: 6px 0 0; color: #667085; font-size: 13px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 2px 8px rgb(15 23 42 / 4%); }
+    .card-header { padding: 14px 16px; border-bottom: 1px solid #eef0f3; font-weight: 600; }
+    .card-body { padding: 16px; }
+    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .button { min-height: 32px; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 6px; background: #fff; color: #344054; cursor: pointer; }
+    .button-primary { border-color: #1677ff; background: #1677ff; color: #fff; }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 20px, 1120px); margin: 12px auto; }
+      .card-body { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <h1 class="page-title">需求原型</h1>
+      <p class="page-description">根据已确认业务规则补充页面内容与交互。</p>
+    </header>
+
+    <section class="card" data-requirement-id="R-001">
+      <div class="card-header">功能区域</div>
+      <div class="card-body">
+        <p>替换为本次需求需要验证的内容。</p>
+        <div class="actions">
+          <button class="button" type="button">取消</button>
+          <button class="button button-primary" type="button">确认</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

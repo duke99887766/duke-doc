@@ -1,4 +1,4 @@
 interface:
   display_name: "Duke Doc"
-  short_description: "编排需求访谈、验收标准、产品文档、评审和实现核对流程"
-  default_prompt: "使用 $duke-doc 编排需求澄清、验收标准、文档输出与评审，自动选择必要阶段和交付深度。"
+  short_description: "编排需求账本、数据验证、原型、验收、产品文档和资产同步流程"
+  default_prompt: "使用 $duke-doc 编排需求澄清、数据与原型验证、状态账本、文档输出和跨资产同步。"

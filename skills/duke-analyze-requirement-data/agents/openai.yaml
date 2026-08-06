@@ -1,0 +1,4 @@
+interface:
+  display_name: "Duke 需求数据分析"
+  short_description: "分析历史业务数据并将证据转化为风险、待确认问题和推荐方案"
+  default_prompt: "使用 $duke-analyze-requirement-data 分析需求相关历史数据，并输出可追溯的数据发现和待确认问题。"

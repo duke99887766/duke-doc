@@ -6,8 +6,10 @@
 
 | Skill | 用途 |
 | --- | --- |
-| `duke-doc` | 编排多阶段需求流程并选择交付深度 |
+| `duke-doc` | 编排多阶段需求、数据、原型和文档资产 |
 | `duke-interview-requirement` | 将模糊需求收敛为结构化需求包 |
+| `duke-analyze-requirement-data` | 将历史业务数据转化为需求证据和待确认问题 |
+| `duke-build-requirement-prototype` | 根据已确认规则构建和校验HTML需求原型 |
 | `duke-write-acceptance` | 将业务规则转换为可执行验收标准 |
 | `duke-write-spec` | 输出轻量 Spec、标准需求或完整 PRD |
 | `duke-review-spec` | 从产品、研发和测试视角评审文档 |
@@ -18,6 +20,8 @@
 
 - 端到端处理：使用 `$duke-doc`。
 - 单独梳理需求：使用 `$duke-interview-requirement`。
+- 使用Excel、CSV或历史明细验证需求：使用 `$duke-analyze-requirement-data`。
+- 制作或更新浏览器可预览的需求原型：使用 `$duke-build-requirement-prototype`。
 - 单独生成验收标准：使用 `$duke-write-acceptance`。
 - 已有明确需求并需要文档：使用 `$duke-write-spec`。
 - 已有文档并需要评审：使用 `$duke-review-spec`。
@@ -34,7 +38,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
 ```
 
-脚本会将 `skills` 下的七个 Skill 同步到 `CODEX_HOME\skills`；未设置 `CODEX_HOME` 时使用当前用户的 `.codex\skills`。
+脚本会将 `skills` 下的九个 Skill 同步到 `CODEX_HOME\skills`；未设置 `CODEX_HOME` 时使用当前用户的 `.codex\skills`。
 
 指定其他目录：
 
