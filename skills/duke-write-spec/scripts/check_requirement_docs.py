@@ -14,22 +14,59 @@ from urllib.parse import unquote
 FRONTMATTER_REQUIRED = {"文档类型", "文档状态", "需求阶段", "版本", "创建时间", "更新时间"}
 VALID_DOC_STATUS = {"草稿", "评审中", "生效中", "待更新", "已归档"}
 VALID_REQ_STAGE = {"需求中", "待开发", "开发中", "联调中", "验收中", "已上线", "已取消"}
+VALID_PROTOTYPE_STATUS = {"无原型", "草稿", "待同步", "已同步", "已废弃"}
 DATE_FIELDS = {"创建时间", "更新时间", "计划上线"}
+PROTOTYPE_ENTRY_LINE_LIMIT = 60
 
 
-def parse_frontmatter(content: str) -> dict[str, str]:
+def clean_yaml_scalar(value: str) -> str:
+    return value.strip().strip('"').strip("'")
+
+
+def parse_frontmatter(content: str) -> dict[str, str | list[str]]:
     if not content.startswith("---\n"):
         return {}
     end = content.find("\n---", 4)
     if end < 0:
         raise ValueError("Frontmatter缺少结束分隔符。")
-    fields: dict[str, str] = {}
-    for line in content[4:end].splitlines():
+    fields: dict[str, str | list[str]] = {}
+    lines = content[4:end].splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index]
         if not line or line[0].isspace() or ":" not in line:
+            index += 1
             continue
         key, value = line.split(":", 1)
-        fields[key.strip()] = value.strip().strip('"').strip("'")
+        key = key.strip()
+        value = clean_yaml_scalar(value)
+        if value:
+            fields[key] = value
+            index += 1
+            continue
+
+        list_values: list[str] = []
+        cursor = index + 1
+        while cursor < len(lines) and (not lines[cursor] or lines[cursor][0].isspace()):
+            item = lines[cursor].strip()
+            if item.startswith("-"):
+                list_values.append(clean_yaml_scalar(item[1:]))
+            cursor += 1
+        fields[key] = list_values if list_values else ""
+        index = cursor
     return fields
+
+
+def scalar_field(frontmatter: dict[str, str | list[str]], field: str) -> str:
+    value = frontmatter.get(field, "")
+    return value if isinstance(value, str) else ""
+
+
+def list_field(frontmatter: dict[str, str | list[str]], field: str) -> list[str]:
+    value = frontmatter.get(field, "")
+    if isinstance(value, list):
+        return [item for item in value if item]
+    return [value] if value else []
 
 
 def parse_date(value: str, field: str, errors: list[str]) -> date | None:
@@ -56,23 +93,112 @@ def clean_link_target(raw_target: str) -> str:
     if target.startswith("<") and target.endswith(">"):
         target = target[1:-1]
     target = target.split("#", 1)[0]
+    target = target.split("?", 1)[0]
     target = re.sub(r":\d+$", "", target)
     return unquote(target)
 
 
+def resolve_local_target(path: Path, raw_target: str, repo_root: Path) -> Path | None:
+    target = clean_link_target(raw_target)
+    if not target or re.match(r"^(https?://|mailto:|tel:)", target, re.I):
+        return None
+    if re.match(r"^[A-Za-z]:[\\/]", target):
+        return Path(target).resolve()
+    if target.startswith("/"):
+        return (repo_root / target.lstrip("/")).resolve()
+    return (path.parent / target).resolve()
+
+
 def check_links(path: Path, content: str, repo_root: Path, warnings: list[str]) -> None:
     for raw_target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", content):
-        target = clean_link_target(raw_target)
-        if not target or re.match(r"^(https?://|mailto:|tel:)", target, re.I):
+        resolved = resolve_local_target(path, raw_target, repo_root)
+        if resolved is None:
             continue
-        if re.match(r"^[A-Za-z]:[\\/]", target):
-            resolved = Path(target)
-        elif target.startswith("/"):
-            resolved = repo_root / target.lstrip("/")
-        else:
-            resolved = path.parent / target
         if not resolved.exists():
             warnings.append(f"本地链接目标不存在：{raw_target}")
+
+
+def find_deprecated_rules(content: str) -> set[str]:
+    deprecated: set[str] = set()
+    for line in content.splitlines():
+        if re.search(r"已废弃|作废|不再使用|已被.+替代", line):
+            deprecated.update(re.findall(r"\bR-\d{3,}\b", line))
+    return deprecated
+
+
+def read_prototype_rules(path: Path, warnings: list[str]) -> set[str]:
+    try:
+        html = path.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        warnings.append(f"原型文件不是有效UTF-8，未检查规则追溯：{path}")
+        return set()
+    values = re.findall(r"data-requirement-id\s*=\s*[\"']([^\"']+)[\"']", html, re.I)
+    return {rule for value in values for rule in re.findall(r"\bR-\d{3,}\b", value)}
+
+
+def check_prototype_contract(
+    path: Path,
+    content: str,
+    frontmatter: dict[str, str | list[str]],
+    repo_root: Path,
+    document_rules: set[str],
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    status = scalar_field(frontmatter, "原型状态")
+    prototype_files = list_field(frontmatter, "原型文件")
+    all_html_links = re.findall(r"\[[^\]]+\]\(([^)]*\.html(?:[#?][^)]*)?)\)", content, re.I)
+
+    if not status:
+        if all_html_links:
+            warnings.append("检测到HTML原型链接，但Frontmatter未登记原型状态和原型文件。")
+        return
+
+    if status not in VALID_PROTOTYPE_STATUS:
+        errors.append(f"无效原型状态：{status}")
+        return
+
+    if status == "无原型":
+        if prototype_files or all_html_links:
+            warnings.append("原型状态为“无原型”，但仍登记或引用了HTML原型。")
+        return
+
+    if not prototype_files:
+        errors.append(f"原型状态为“{status}”时必须填写原型文件。")
+
+    first_lines = "\n".join(content.splitlines()[:PROTOTYPE_ENTRY_LINE_LIMIT])
+    top_html_links = re.findall(r"\[[^\]]+\]\(([^)]*\.html(?:[#?][^)]*)?)\)", first_lines, re.I)
+    has_quick_entry = bool(re.search(r"^##\s+(?:\d+[.、]\s*)?研发快速入口\s*$", first_lines, re.M))
+    has_l1_entry = bool(re.search(r"(?:页面)?原型[：:].*\.html", first_lines, re.I))
+    if not top_html_links or not (has_quick_entry or has_l1_entry):
+        errors.append(f"正文前{PROTOTYPE_ENTRY_LINE_LIMIT}行必须提供可点击的研发原型入口。")
+
+    top_targets = {
+        resolved
+        for target in top_html_links
+        if (resolved := resolve_local_target(path, target, repo_root)) is not None
+    }
+    deprecated_rules = find_deprecated_rules(content)
+    for raw_target in prototype_files:
+        resolved = resolve_local_target(path, raw_target, repo_root)
+        if resolved is None:
+            warnings.append(f"原型文件应填写本地HTML路径：{raw_target}")
+            continue
+        if not resolved.is_file():
+            errors.append(f"原型文件不存在：{raw_target}")
+            continue
+        if resolved not in top_targets:
+            warnings.append(f"研发快速入口未引用Frontmatter中的原型文件：{raw_target}")
+        if status != "已同步" or resolved.suffix.lower() != ".html":
+            continue
+        prototype_rules = read_prototype_rules(resolved, warnings)
+        unknown_rules = sorted(prototype_rules - document_rules)
+        uses_derivative_rules = bool(re.search(r"\bSR-\d{3,}\b", content))
+        if document_rules and unknown_rules and not uses_derivative_rules:
+            warnings.append("原型引用了本文未登记的规则：" + ", ".join(unknown_rules))
+        stale_rules = sorted(prototype_rules & deprecated_rules)
+        if stale_rules:
+            errors.append("已同步原型仍引用已废弃规则：" + ", ".join(stale_rules))
 
 
 def main() -> int:
@@ -113,29 +239,53 @@ def main() -> int:
         missing_fields = sorted(FRONTMATTER_REQUIRED - set(frontmatter))
         if missing_fields:
             errors.append("Frontmatter缺少字段：" + ", ".join(missing_fields))
-        if frontmatter.get("文档状态") and frontmatter["文档状态"] not in VALID_DOC_STATUS:
-            errors.append(f"无效文档状态：{frontmatter['文档状态']}")
-        if frontmatter.get("需求阶段") and frontmatter["需求阶段"] not in VALID_REQ_STAGE:
-            errors.append(f"无效需求阶段：{frontmatter['需求阶段']}")
-        if frontmatter.get("版本") and not re.fullmatch(r"V\d+\.\d+(?:\.\d+)?", frontmatter["版本"]):
-            errors.append(f"版本格式无效：{frontmatter['版本']}")
+        document_status = scalar_field(frontmatter, "文档状态")
+        requirement_stage = scalar_field(frontmatter, "需求阶段")
+        version = scalar_field(frontmatter, "版本")
+        if document_status and document_status not in VALID_DOC_STATUS:
+            errors.append(f"无效文档状态：{document_status}")
+        if requirement_stage and requirement_stage not in VALID_REQ_STAGE:
+            errors.append(f"无效需求阶段：{requirement_stage}")
+        if version and not re.fullmatch(r"V\d+\.\d+(?:\.\d+)?", version):
+            errors.append(f"版本格式无效：{version}")
 
-        parsed_dates = {field: parse_date(frontmatter.get(field, ""), field, errors) for field in DATE_FIELDS}
+        parsed_dates = {field: parse_date(scalar_field(frontmatter, field), field, errors) for field in DATE_FIELDS}
         created = parsed_dates.get("创建时间")
         updated = parsed_dates.get("更新时间")
         if created and updated and updated < created:
             errors.append("更新时间不能早于创建时间。")
-        if args.expect_update_date and frontmatter.get("更新时间") != args.expect_update_date:
-            errors.append(f"更新时间应为 {args.expect_update_date}，实际为 {frontmatter.get('更新时间', '空')}")
+        actual_update_date = scalar_field(frontmatter, "更新时间")
+        if args.expect_update_date and actual_update_date != args.expect_update_date:
+            errors.append(f"更新时间应为 {args.expect_update_date}，实际为 {actual_update_date or '空'}")
 
-    check_continuity("R", content, warnings)
-    check_continuity("AC", content, warnings)
+    uses_derivative_rules = bool(re.search(r"\bSR-\d{3,}\b", content))
+    if uses_derivative_rules:
+        check_continuity("SR", content, warnings)
+        check_continuity("SAC", content, warnings)
+        rule_numbers = {int(value) for value in re.findall(r"\bR-(\d{3,})\b", content)}
+    else:
+        rule_numbers = check_continuity("R", content, warnings)
+        check_continuity("AC", content, warnings)
     for line_number, line in enumerate(content.splitlines(), start=1):
-        if re.search(r"\bAC-\d{3,}\b", line) and not re.search(r"\bR-\d{3,}\b", line):
+        is_quick_acceptance_link = line.lstrip().startswith("| 验收标准 |")
+        if (
+            re.search(r"\bAC-\d{3,}\b", line)
+            and not re.search(r"\bR-\d{3,}\b", line)
+            and not is_quick_acceptance_link
+        ):
             warnings.append(f"第 {line_number} 行的验收编号未在同一行引用规则编号。")
 
     repo_root = args.repo_root.resolve() if args.repo_root else path.parent
     check_links(path, content, repo_root, warnings)
+    check_prototype_contract(
+        path,
+        content,
+        frontmatter,
+        repo_root,
+        {f"R-{number:03d}" for number in rule_numbers},
+        errors,
+        warnings,
+    )
 
     if args.index:
         index_path = args.index.resolve()
