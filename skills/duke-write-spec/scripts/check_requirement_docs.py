@@ -11,7 +11,9 @@ from pathlib import Path
 from urllib.parse import unquote
 
 
-FRONTMATTER_REQUIRED = {"文档类型", "文档状态", "需求阶段", "版本", "创建时间", "更新时间"}
+COMMON_FRONTMATTER_REQUIRED = {"文档类型", "文档状态", "创建时间", "更新时间"}
+REQUIREMENT_FRONTMATTER_REQUIRED = {"需求阶段", "版本"}
+REQUIREMENT_DOC_TYPES = {"产品需求文档", "产品设计方案", "业务规则说明", "项目导航"}
 VALID_DOC_STATUS = {"草稿", "评审中", "生效中", "待更新", "已归档"}
 VALID_REQ_STAGE = {"需求中", "待开发", "开发中", "联调中", "验收中", "已上线", "已取消"}
 VALID_PROTOTYPE_STATUS = {"无原型", "草稿", "待同步", "已同步", "已废弃"}
@@ -77,6 +79,19 @@ def parse_date(value: str, field: str, errors: list[str]) -> date | None:
     except ValueError:
         errors.append(f"{field} 必须使用 YYYY-MM-DD：{value}")
         return None
+
+
+def is_template_document(path: Path, content: str) -> bool:
+    return "Obsidian模板" in path.parts or "{{date}}" in content or "{{title}}" in content
+
+
+def required_frontmatter_fields(path: Path, content: str, frontmatter: dict[str, str | list[str]]) -> set[str]:
+    if is_template_document(path, content):
+        return set()
+    required = set(COMMON_FRONTMATTER_REQUIRED)
+    if scalar_field(frontmatter, "文档类型") in REQUIREMENT_DOC_TYPES:
+        required.update(REQUIREMENT_FRONTMATTER_REQUIRED)
+    return required
 
 
 def check_continuity(prefix: str, content: str, warnings: list[str]) -> set[int]:
@@ -236,7 +251,7 @@ def main() -> int:
     if args.require_frontmatter and not frontmatter:
         errors.append("正式需求文档缺少Frontmatter。")
     if frontmatter:
-        missing_fields = sorted(FRONTMATTER_REQUIRED - set(frontmatter))
+        missing_fields = sorted(required_frontmatter_fields(path, content, frontmatter) - set(frontmatter))
         if missing_fields:
             errors.append("Frontmatter缺少字段：" + ", ".join(missing_fields))
         document_status = scalar_field(frontmatter, "文档状态")
@@ -249,7 +264,11 @@ def main() -> int:
         if version and not re.fullmatch(r"V\d+\.\d+(?:\.\d+)?", version):
             errors.append(f"版本格式无效：{version}")
 
-        parsed_dates = {field: parse_date(scalar_field(frontmatter, field), field, errors) for field in DATE_FIELDS}
+        template_document = is_template_document(path, content)
+        parsed_dates = {
+            field: None if template_document else parse_date(scalar_field(frontmatter, field), field, errors)
+            for field in DATE_FIELDS
+        }
         created = parsed_dates.get("创建时间")
         updated = parsed_dates.get("更新时间")
         if created and updated and updated < created:

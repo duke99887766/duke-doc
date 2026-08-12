@@ -55,3 +55,11 @@ skills/   独立可安装的 Skill
 scripts/  仓库级安装工具
 evals/    路由和职责边界回归场景
 ```
+
+## 回归检查
+
+```powershell
+python -X utf8 .\evals\run-regression.py
+```
+
+回归检查覆盖 Skill 基础结构、核心职责契约、文档校验正反例和 HTML 原型校验正反例。环境安装 `PyYAML` 时同时运行官方 `quick_validate.py`；缺少依赖时使用无依赖基础结构检查并明确警告。
