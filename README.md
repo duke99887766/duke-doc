@@ -9,7 +9,7 @@
 | `duke-doc` | 编排多阶段需求、数据、原型和文档资产 |
 | `duke-interview-requirement` | 将模糊需求收敛为结构化需求包 |
 | `duke-analyze-requirement-data` | 将历史业务数据转化为需求证据和待确认问题 |
-| `duke-build-requirement-prototype` | 根据已确认规则构建和校验HTML需求原型 |
+| `duke-build-requirement-prototype` | 根据已确认规则构建和校验HTML需求原型，后台页面优先采用NG-ZORRO规范 |
 | `duke-write-acceptance` | 将业务规则转换为可执行验收标准 |
 | `duke-write-spec` | 输出轻量 Spec、标准需求或完整 PRD |
 | `duke-review-spec` | 从产品、研发和测试视角评审文档 |

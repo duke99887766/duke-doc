@@ -38,6 +38,12 @@ def assert_contains(path: Path, phrases: list[str], failures: list[str]) -> None
             failures.append(f"{path.relative_to(ROOT)} 缺少契约关键词：{phrase}")
 
 
+def assert_clean_utf8(path: Path, failures: list[str]) -> None:
+    content = path.read_text(encoding="utf-8-sig")
+    if "�" in content:
+        failures.append(f"{path.relative_to(ROOT)} 包含 Unicode 替换字符，可能存在编码损坏。")
+
+
 def basic_skill_validation(skill_dir: Path) -> list[str]:
     errors: list[str] = []
     skill_file = skill_dir / "SKILL.md"
@@ -103,11 +109,25 @@ def main() -> int:
         SKILLS / "duke-build-requirement-prototype" / "SKILL.md": [
             "data-requirement-id",
             "check_html_prototype.py",
+            "NG-ZORRO 18.2.x",
+            "admin-ng-zorro-prototype.html",
+        ],
+        SKILLS / "duke-build-requirement-prototype" / "references" / "ng-zorro-admin-patterns.md": [
+            "ng-zorro-antd@18.2.x",
+            "data-design-system=\"ng-zorro-18.2.x\"",
+            "既有页面",
+            "移动端、营销页和非后台页面",
         ],
     }
     for path, phrases in contracts.items():
         checks += len(phrases)
         assert_contains(path, phrases, failures)
+
+    prototype_openai_yaml = SKILLS / "duke-build-requirement-prototype" / "agents" / "openai.yaml"
+    checks += 3
+    assert_contains(prototype_openai_yaml, ["需求原型构建", "NG-ZORRO", "$duke-build-requirement-prototype"], failures)
+    checks += 1
+    assert_clean_utf8(prototype_openai_yaml, failures)
 
     document_validator = SKILLS / "duke-write-spec" / "scripts" / "check_requirement_docs.py"
     prototype_validator = SKILLS / "duke-build-requirement-prototype" / "scripts" / "check_html_prototype.py"
@@ -116,6 +136,7 @@ def main() -> int:
     invalid_doc = fixtures / "invalid-requirement.md"
     valid_html = fixtures / "valid-prototype.html"
     invalid_html = fixtures / "invalid-prototype.html"
+    admin_html = SKILLS / "duke-build-requirement-prototype" / "assets" / "admin-ng-zorro-prototype.html"
 
     checks += 1
     code, output = run([sys.executable, "-X", "utf8", str(document_validator), str(valid_doc), "--require-frontmatter"])
@@ -136,6 +157,11 @@ def main() -> int:
     code, _ = run([sys.executable, "-X", "utf8", str(prototype_validator), str(invalid_html)])
     if code == 0:
         failures.append("重复 HTML id 未被阻断。")
+
+    checks += 1
+    code, output = run([sys.executable, "-X", "utf8", str(prototype_validator), str(admin_html)])
+    if code or "WARN:" in output:
+        failures.append(f"NG-ZORRO 后台模板未干净通过：{output}")
 
     if failures:
         print(f"Regression checks: {checks}, failures: {len(failures)}")

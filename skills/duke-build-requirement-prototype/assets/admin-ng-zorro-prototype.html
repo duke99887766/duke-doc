@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN" data-design-system="ng-zorro-18.2.x">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NG-ZORRO 后台需求原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: rgb(0 0 0 / 88%);
+      background: #f5f5f5;
+      --ant-primary: #1677ff;
+      --ant-primary-hover: #4096ff;
+      --ant-border: #d9d9d9;
+      --ant-split: #f0f0f0;
+      --ant-muted: rgb(0 0 0 / 45%);
+      --ant-radius: 6px;
+      --ant-shadow: 0 6px 16px 0 rgb(0 0 0 / 8%), 0 3px 6px -4px rgb(0 0 0 / 12%);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: #f5f5f5; }
+    button, input, select { font: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #91caff; outline-offset: 2px; }
+    .ant-layout { min-height: 100vh; display: grid; grid-template-columns: 208px minmax(0, 1fr); }
+    .ant-layout-sider { background: #001529; color: rgb(255 255 255 / 65%); }
+    .brand { height: 64px; display: flex; align-items: center; gap: 10px; padding: 0 20px; color: #fff; font-weight: 600; }
+    .brand-mark { width: 28px; height: 28px; display: grid; place-items: center; border-radius: var(--ant-radius); background: var(--ant-primary); }
+    .ant-menu { margin: 0; padding: 8px; list-style: none; }
+    .ant-menu-item { min-height: 40px; display: flex; align-items: center; padding: 0 16px; border-radius: var(--ant-radius); cursor: pointer; }
+    .ant-menu-item + .ant-menu-item { margin-top: 4px; }
+    .ant-menu-item-selected { color: #fff; background: var(--ant-primary); }
+    .ant-layout-main { min-width: 0; }
+    .ant-layout-header { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: #fff; border-bottom: 1px solid var(--ant-split); }
+    .header-title { font-weight: 600; }
+    .header-user { color: var(--ant-muted); font-size: 14px; }
+    .ant-layout-content { padding: 20px 24px 32px; }
+    .ant-breadcrumb { margin-bottom: 12px; color: var(--ant-muted); font-size: 14px; }
+    .ant-page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .ant-page-title { margin: 0; font-size: 20px; line-height: 28px; }
+    .ant-page-subtitle { margin: 4px 0 0; color: var(--ant-muted); font-size: 14px; }
+    .ant-card { background: #fff; border: 1px solid var(--ant-split); border-radius: 8px; }
+    .ant-card + .ant-card { margin-top: 16px; }
+    .ant-card-body { padding: 20px; }
+    .ant-form { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 16px; }
+    .ant-form-item { min-width: 0; }
+    .ant-form-label { display: block; margin-bottom: 6px; font-size: 14px; }
+    .ant-input, .ant-select { width: 100%; height: 32px; padding: 4px 11px; color: inherit; background: #fff; border: 1px solid var(--ant-border); border-radius: var(--ant-radius); }
+    .ant-input:hover, .ant-select:hover { border-color: var(--ant-primary-hover); }
+    .ant-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+    .ant-btn { min-height: 32px; padding: 4px 15px; color: rgb(0 0 0 / 88%); background: #fff; border: 1px solid var(--ant-border); border-radius: var(--ant-radius); cursor: pointer; box-shadow: 0 2px 0 rgb(0 0 0 / 2%); }
+    .ant-btn:hover { color: var(--ant-primary); border-color: var(--ant-primary-hover); }
+    .ant-btn-primary { color: #fff; background: var(--ant-primary); border-color: var(--ant-primary); }
+    .ant-btn-primary:hover { color: #fff; background: var(--ant-primary-hover); }
+    .ant-btn-link { padding-inline: 4px; color: var(--ant-primary); border-color: transparent; box-shadow: none; }
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .table-title { font-weight: 600; }
+    .table-count { margin-left: 8px; color: var(--ant-muted); font-size: 13px; font-weight: 400; }
+    .ant-table-container { overflow-x: auto; border: 1px solid var(--ant-split); border-radius: var(--ant-radius); }
+    .ant-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
+    .ant-table th, .ant-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--ant-split); }
+    .ant-table th { background: #fafafa; font-weight: 600; }
+    .ant-table tbody tr:hover { background: #fafafa; }
+    .ant-table tbody tr:last-child td { border-bottom: 0; }
+    .ant-tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border: 1px solid #b7eb8f; border-radius: 4px; color: #389e0d; background: #f6ffed; font-size: 12px; }
+    .ant-tag-default { color: rgb(0 0 0 / 65%); background: #fafafa; border-color: var(--ant-border); }
+    .ant-empty { display: none; padding: 36px 16px; color: var(--ant-muted); text-align: center; }
+    .ant-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 16px; }
+    .ant-pagination button { width: 32px; min-height: 32px; padding: 0; }
+    .ant-pagination .active { color: #fff; background: var(--ant-primary); border-color: var(--ant-primary); }
+    .ant-drawer-mask { position: fixed; inset: 0; display: none; background: rgb(0 0 0 / 45%); z-index: 10; }
+    .ant-drawer { position: fixed; inset: 0 0 0 auto; width: min(520px, 92vw); display: flex; flex-direction: column; background: #fff; box-shadow: var(--ant-shadow); transform: translateX(100%); transition: transform 180ms ease; z-index: 11; }
+    .ant-drawer-mask.open { display: block; }
+    .ant-drawer.open { transform: translateX(0); }
+    .ant-drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--ant-split); }
+    .ant-drawer-title { margin: 0; font-size: 16px; }
+    .ant-drawer-body { flex: 1; padding: 24px; overflow-y: auto; }
+    .ant-drawer-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 24px; border-top: 1px solid var(--ant-split); }
+    .ant-descriptions { display: grid; grid-template-columns: 120px 1fr; gap: 0; border: 1px solid var(--ant-split); border-radius: var(--ant-radius); overflow: hidden; font-size: 14px; }
+    .ant-descriptions dt, .ant-descriptions dd { margin: 0; padding: 12px 16px; border-bottom: 1px solid var(--ant-split); }
+    .ant-descriptions dt { color: var(--ant-muted); background: #fafafa; }
+    .ant-descriptions dt:last-of-type, .ant-descriptions dd:last-of-type { border-bottom: 0; }
+    .ant-message { position: fixed; top: 16px; left: 50%; display: none; padding: 10px 16px; background: #fff; border-radius: var(--ant-radius); box-shadow: var(--ant-shadow); transform: translateX(-50%); z-index: 20; font-size: 14px; }
+    .ant-message.show { display: block; }
+    @media (max-width: 900px) {
+      .ant-layout { grid-template-columns: 72px minmax(0, 1fr); }
+      .brand { justify-content: center; padding: 0; }
+      .brand-text, .ant-menu-item span { display: none; }
+      .ant-menu-item { justify-content: center; padding: 0; }
+      .ant-form { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .ant-layout { display: block; }
+      .ant-layout-sider { display: none; }
+      .ant-layout-header { padding: 0 16px; }
+      .ant-layout-content { padding: 16px; }
+      .ant-page-header { flex-direction: column; }
+      .ant-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ant-layout" data-prototype-type="admin">
+    <aside class="ant-layout-sider" aria-label="主导航">
+      <div class="brand"><span class="brand-mark">D</span><span class="brand-text">业务管理台</span></div>
+      <nav>
+        <ul class="ant-menu">
+          <li class="ant-menu-item ant-menu-item-selected"><span>业务列表</span></li>
+          <li class="ant-menu-item"><span>规则配置</span></li>
+          <li class="ant-menu-item"><span>操作记录</span></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <div class="ant-layout-main">
+      <header class="ant-layout-header">
+        <div class="header-title">需求原型</div>
+        <div class="header-user">当前用户：产品验证账号</div>
+      </header>
+
+      <main class="ant-layout-content">
+        <div class="ant-breadcrumb" aria-label="面包屑">首页 / 业务管理 / 业务列表</div>
+        <section class="ant-page-header">
+          <div>
+            <h1 class="ant-page-title">业务列表</h1>
+            <p class="ant-page-subtitle">使用已确认规则替换示例字段、数据和交互。</p>
+          </div>
+          <button class="ant-btn ant-btn-primary" id="createButton" type="button">新建业务</button>
+        </section>
+
+        <section class="ant-card" data-requirement-id="R-001">
+          <div class="ant-card-body">
+            <form class="ant-form" id="filterForm">
+              <div class="ant-form-item">
+                <label class="ant-form-label" for="keyword">关键词</label>
+                <input class="ant-input" id="keyword" name="keyword" placeholder="请输入名称或编号">
+              </div>
+              <div class="ant-form-item">
+                <label class="ant-form-label" for="status">状态</label>
+                <select class="ant-select" id="status" name="status">
+                  <option value="">全部</option>
+                  <option value="启用">启用</option>
+                  <option value="停用">停用</option>
+                </select>
+              </div>
+              <div class="ant-form-item">
+                <label class="ant-form-label" for="owner">负责人</label>
+                <select class="ant-select" id="owner" name="owner">
+                  <option value="">全部</option>
+                  <option value="张三">张三</option>
+                  <option value="李四">李四</option>
+                </select>
+              </div>
+              <div class="ant-form-actions">
+                <button class="ant-btn" id="resetButton" type="reset">重置</button>
+                <button class="ant-btn ant-btn-primary" type="submit">查询</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="ant-card" data-requirement-id="R-001">
+          <div class="ant-card-body">
+            <div class="table-toolbar">
+              <div class="table-title">查询结果<span class="table-count" id="resultCount">共 3 条</span></div>
+              <button class="ant-btn" type="button" id="refreshButton">刷新</button>
+            </div>
+            <div class="ant-table-container" id="tableContainer">
+              <table class="ant-table">
+                <thead>
+                  <tr><th>业务编号</th><th>业务名称</th><th>状态</th><th>负责人</th><th>更新时间</th><th>操作</th></tr>
+                </thead>
+                <tbody id="tableBody">
+                  <tr data-name="客户回访 A001" data-status="启用" data-owner="张三"><td>A001</td><td>客户回访</td><td><span class="ant-tag">启用</span></td><td>张三</td><td>2026-08-13 10:30</td><td><button class="ant-btn ant-btn-link viewButton" type="button" data-id="A001" data-name="客户回访" data-status="启用" data-owner="张三">查看</button></td></tr>
+                  <tr data-name="退款审核 A002" data-status="启用" data-owner="李四"><td>A002</td><td>退款审核</td><td><span class="ant-tag">启用</span></td><td>李四</td><td>2026-08-12 16:20</td><td><button class="ant-btn ant-btn-link viewButton" type="button" data-id="A002" data-name="退款审核" data-status="启用" data-owner="李四">查看</button></td></tr>
+                  <tr data-name="历史配置 A003" data-status="停用" data-owner="张三"><td>A003</td><td>历史配置</td><td><span class="ant-tag ant-tag-default">停用</span></td><td>张三</td><td>2026-08-10 09:15</td><td><button class="ant-btn ant-btn-link viewButton" type="button" data-id="A003" data-name="历史配置" data-status="停用" data-owner="张三">查看</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="ant-empty" id="emptyState">暂无符合条件的数据</div>
+            <div class="ant-pagination" aria-label="分页">
+              <button class="ant-btn" type="button" disabled>上一页</button>
+              <button class="ant-btn active" type="button" aria-current="page">1</button>
+              <button class="ant-btn" type="button" disabled>下一页</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="ant-drawer-mask" id="drawerMask"></div>
+  <aside class="ant-drawer" id="detailDrawer" aria-labelledby="drawerTitle" aria-hidden="true" inert>
+    <div class="ant-drawer-header">
+      <h2 class="ant-drawer-title" id="drawerTitle">业务详情</h2>
+      <button class="ant-btn" id="closeDrawerButton" type="button" aria-label="关闭详情">关闭</button>
+    </div>
+    <div class="ant-drawer-body">
+      <dl class="ant-descriptions">
+        <dt>业务编号</dt><dd id="detailId">—</dd>
+        <dt>业务名称</dt><dd id="detailName">—</dd>
+        <dt>状态</dt><dd id="detailStatus">—</dd>
+        <dt>负责人</dt><dd id="detailOwner">—</dd>
+      </dl>
+    </div>
+    <div class="ant-drawer-footer">
+      <button class="ant-btn" id="footerCloseButton" type="button">关闭</button>
+      <button class="ant-btn ant-btn-primary" id="editButton" type="button">编辑</button>
+    </div>
+  </aside>
+
+  <div class="ant-message" id="message" role="status" aria-live="polite">操作已完成</div>
+
+  <script>
+    const filterForm = document.getElementById("filterForm");
+    const rows = Array.from(document.querySelectorAll("#tableBody tr"));
+    const tableContainer = document.getElementById("tableContainer");
+    const emptyState = document.getElementById("emptyState");
+    const resultCount = document.getElementById("resultCount");
+    const drawer = document.getElementById("detailDrawer");
+    const drawerMask = document.getElementById("drawerMask");
+    const message = document.getElementById("message");
+    let drawerTrigger = null;
+
+    function showMessage(text) {
+      message.textContent = text;
+      message.classList.add("show");
+      window.setTimeout(function () { message.classList.remove("show"); }, 1600);
+    }
+
+    function applyFilters() {
+      const keyword = document.getElementById("keyword").value.trim().toLowerCase();
+      const status = document.getElementById("status").value;
+      const owner = document.getElementById("owner").value;
+      let visible = 0;
+      rows.forEach(function (row) {
+        const matches = (!keyword || row.dataset.name.toLowerCase().includes(keyword))
+          && (!status || row.dataset.status === status)
+          && (!owner || row.dataset.owner === owner);
+        row.hidden = !matches;
+        if (matches) visible += 1;
+      });
+      resultCount.textContent = "共 " + visible + " 条";
+      tableContainer.hidden = visible === 0;
+      emptyState.style.display = visible === 0 ? "block" : "none";
+    }
+
+    function openDrawer(button) {
+      drawerTrigger = button;
+      document.getElementById("detailId").textContent = button.dataset.id;
+      document.getElementById("detailName").textContent = button.dataset.name;
+      document.getElementById("detailStatus").textContent = button.dataset.status;
+      document.getElementById("detailOwner").textContent = button.dataset.owner;
+      drawer.classList.add("open");
+      drawerMask.classList.add("open");
+      drawer.removeAttribute("inert");
+      drawer.setAttribute("aria-hidden", "false");
+      document.getElementById("closeDrawerButton").focus();
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      drawerMask.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+      drawer.setAttribute("inert", "");
+      if (drawerTrigger) drawerTrigger.focus();
+    }
+
+    filterForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      applyFilters();
+    });
+    filterForm.addEventListener("reset", function () {
+      window.setTimeout(applyFilters, 0);
+    });
+    document.querySelectorAll(".viewButton").forEach(function (button) {
+      button.addEventListener("click", function () { openDrawer(button); });
+    });
+    document.getElementById("closeDrawerButton").addEventListener("click", closeDrawer);
+    document.getElementById("footerCloseButton").addEventListener("click", closeDrawer);
+    drawerMask.addEventListener("click", closeDrawer);
+    document.getElementById("refreshButton").addEventListener("click", function () { showMessage("列表已刷新"); });
+    document.getElementById("createButton").addEventListener("click", function () { showMessage("替换为新建业务交互"); });
+    document.getElementById("editButton").addEventListener("click", function () { showMessage("替换为编辑业务交互"); });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
+    });
+  </script>
+</body>
+</html>
