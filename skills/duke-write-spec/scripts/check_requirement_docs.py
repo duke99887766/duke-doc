@@ -94,12 +94,26 @@ def required_frontmatter_fields(path: Path, content: str, frontmatter: dict[str,
     return required
 
 
+def extract_defined_numbers(prefix: str, content: str) -> set[int]:
+    escaped = re.escape(prefix)
+    patterns = (
+        rf"(?m)^\s*\|\s*{escaped}-(\d{{3,}})\s*\|",
+        rf"(?m)^\s*(?:#{{1,6}}\s+|[-*+]\s+|\d+[.)]\s+)(?:\*\*)?{escaped}-(\d{{3,}})\b",
+        rf"(?m)^\s*(?:\*\*)?{escaped}-(\d{{3,}})(?:\*\*)?\s*[：:]",
+    )
+    return {int(value) for pattern in patterns for value in re.findall(pattern, content)}
+
+
 def check_continuity(prefix: str, content: str, warnings: list[str]) -> set[int]:
     numbers = {int(value) for value in re.findall(rf"\b{prefix}-(\d{{3,}})\b", content)}
-    if numbers:
-        missing = sorted(set(range(min(numbers), max(numbers) + 1)) - numbers)
+    defined_numbers = extract_defined_numbers(prefix, content)
+    if defined_numbers:
+        missing = sorted(set(range(min(defined_numbers), max(defined_numbers) + 1)) - defined_numbers)
         if missing:
-            warnings.append(f"{prefix}编号存在缺口：" + ", ".join(f"{prefix}-{n:03d}" for n in missing))
+            warnings.append(
+                f"[本文定义] {prefix}编号存在缺口："
+                + ", ".join(f"{prefix}-{n:03d}" for n in missing)
+            )
     return numbers
 
 
@@ -130,7 +144,7 @@ def check_links(path: Path, content: str, repo_root: Path, warnings: list[str]) 
         if resolved is None:
             continue
         if not resolved.exists():
-            warnings.append(f"本地链接目标不存在：{raw_target}")
+            warnings.append(f"[跨资产] 本地链接目标不存在：{raw_target}")
 
 
 def find_deprecated_rules(content: str) -> set[str]:
@@ -145,7 +159,7 @@ def read_prototype_rules(path: Path, warnings: list[str]) -> set[str]:
     try:
         html = path.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError:
-        warnings.append(f"原型文件不是有效UTF-8，未检查规则追溯：{path}")
+        warnings.append(f"[原型关联] 原型文件不是有效UTF-8，未检查规则追溯：{path}")
         return set()
     values = re.findall(r"data-requirement-id\s*=\s*[\"']([^\"']+)[\"']", html, re.I)
     return {rule for value in values for rule in re.findall(r"\bR-\d{3,}\b", value)}
@@ -166,7 +180,7 @@ def check_prototype_contract(
 
     if not status:
         if all_html_links:
-            warnings.append("检测到HTML原型链接，但Frontmatter未登记原型状态和原型文件。")
+            warnings.append("[原型关联] 检测到HTML原型链接，但Frontmatter未登记原型状态和原型文件。")
         return
 
     if status not in VALID_PROTOTYPE_STATUS:
@@ -175,7 +189,7 @@ def check_prototype_contract(
 
     if status == "无原型":
         if prototype_files or all_html_links:
-            warnings.append("原型状态为“无原型”，但仍登记或引用了HTML原型。")
+            warnings.append("[原型关联] 原型状态为“无原型”，但仍登记或引用了HTML原型。")
         return
 
     if not prototype_files:
@@ -197,20 +211,20 @@ def check_prototype_contract(
     for raw_target in prototype_files:
         resolved = resolve_local_target(path, raw_target, repo_root)
         if resolved is None:
-            warnings.append(f"原型文件应填写本地HTML路径：{raw_target}")
+            warnings.append(f"[原型关联] 原型文件应填写本地HTML路径：{raw_target}")
             continue
         if not resolved.is_file():
             errors.append(f"原型文件不存在：{raw_target}")
             continue
         if resolved not in top_targets:
-            warnings.append(f"研发快速入口未引用Frontmatter中的原型文件：{raw_target}")
+            warnings.append(f"[原型关联] 研发快速入口未引用Frontmatter中的原型文件：{raw_target}")
         if status != "已同步" or resolved.suffix.lower() != ".html":
             continue
         prototype_rules = read_prototype_rules(resolved, warnings)
         unknown_rules = sorted(prototype_rules - document_rules)
         uses_derivative_rules = bool(re.search(r"\bSR-\d{3,}\b", content))
         if document_rules and unknown_rules and not uses_derivative_rules:
-            warnings.append("原型引用了本文未登记的规则：" + ", ".join(unknown_rules))
+            warnings.append("[原型关联] 原型引用了本文未登记的规则：" + ", ".join(unknown_rules))
         stale_rules = sorted(prototype_rules & deprecated_rules)
         if stale_rules:
             errors.append("已同步原型仍引用已废弃规则：" + ", ".join(stale_rules))
@@ -292,7 +306,7 @@ def main() -> int:
             and not re.search(r"\bR-\d{3,}\b", line)
             and not is_quick_acceptance_link
         ):
-            warnings.append(f"第 {line_number} 行的验收编号未在同一行引用规则编号。")
+            warnings.append(f"[规则追溯] 第 {line_number} 行的验收编号未在同一行引用规则编号。")
 
     repo_root = args.repo_root.resolve() if args.repo_root else path.parent
     check_links(path, content, repo_root, warnings)
@@ -313,7 +327,7 @@ def main() -> int:
         else:
             index_content = index_path.read_text(encoding="utf-8-sig")
             if path.name not in index_content and path.stem not in index_content:
-                warnings.append(f"索引中未找到当前文档：{path.name}")
+                warnings.append(f"[跨资产] 索引中未找到当前文档：{path.name}")
 
     print(f"Requirement document check: {path}")
     for item in errors:

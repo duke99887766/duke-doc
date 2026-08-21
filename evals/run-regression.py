@@ -6,6 +6,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+from urllib.request import urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +43,36 @@ def assert_clean_utf8(path: Path, failures: list[str]) -> None:
     content = path.read_text(encoding="utf-8-sig")
     if "�" in content:
         failures.append(f"{path.relative_to(ROOT)} 包含 Unicode 替换字符，可能存在编码损坏。")
+
+
+def check_preview_server(script: Path, html_file: Path, failures: list[str]) -> None:
+    process = subprocess.Popen(
+        [sys.executable, "-X", "utf8", str(script), str(html_file)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    try:
+        first_line = process.stdout.readline().strip() if process.stdout else ""
+        if not first_line.startswith("PREVIEW_URL: http://127.0.0.1:"):
+            failures.append(f"localhost 预览未输出有效地址：{first_line or '无输出'}")
+            return
+        url = first_line.split("PREVIEW_URL:", 1)[1].strip()
+        with urlopen(url, timeout=5) as response:
+            content = response.read().decode("utf-8-sig")
+        if response.status != 200 or "<title>" not in content:
+            failures.append("localhost 预览未返回有效HTML内容。")
+    except Exception as exc:
+        failures.append(f"localhost 预览回归失败：{exc}")
+    finally:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
 
 
 def basic_skill_validation(skill_dir: Path) -> list[str]:
@@ -100,23 +131,35 @@ def main() -> int:
             "影响资产清单",
             "历史数据",
             "原型",
+            "C0 视觉微调",
+            "任务内恢复包",
         ],
         SKILLS / "duke-write-spec" / "SKILL.md": [
             "check_requirement_docs.py",
             "研发快速入口",
             "Frontmatter",
+            "唯一规范性文档",
         ],
         SKILLS / "duke-build-requirement-prototype" / "SKILL.md": [
             "data-requirement-id",
             "check_html_prototype.py",
             "NG-ZORRO 18.2.x",
             "admin-ng-zorro-prototype.html",
+            "布局微调模式",
+            "preview_prototype.py",
         ],
         SKILLS / "duke-build-requirement-prototype" / "references" / "ng-zorro-admin-patterns.md": [
             "ng-zorro-antd@18.2.x",
             "data-design-system=\"ng-zorro-18.2.x\"",
             "既有页面",
             "移动端、营销页和非后台页面",
+        ],
+        ROOT / "evals" / "routing-scenarios.md": [
+            "只把订单号前的平台图标向左移动 4px",
+            "C1 展示规则",
+            "C2 业务规则变更",
+            "唯一规范性文档",
+            "preview_prototype.py",
         ],
     }
     for path, phrases in contracts.items():
@@ -134,9 +177,12 @@ def main() -> int:
     fixtures = ROOT / "evals" / "fixtures"
     valid_doc = fixtures / "valid-requirement.md"
     invalid_doc = fixtures / "invalid-requirement.md"
+    reference_doc = fixtures / "valid-rule-reference.md"
+    rule_gap_doc = fixtures / "invalid-rule-gap.md"
     valid_html = fixtures / "valid-prototype.html"
     invalid_html = fixtures / "invalid-prototype.html"
     admin_html = SKILLS / "duke-build-requirement-prototype" / "assets" / "admin-ng-zorro-prototype.html"
+    preview_server = SKILLS / "duke-build-requirement-prototype" / "scripts" / "preview_prototype.py"
 
     checks += 1
     code, output = run([sys.executable, "-X", "utf8", str(document_validator), str(valid_doc), "--require-frontmatter"])
@@ -147,6 +193,16 @@ def main() -> int:
     code, _ = run([sys.executable, "-X", "utf8", str(document_validator), str(invalid_doc), "--require-frontmatter"])
     if code == 0:
         failures.append("缺失需求字段的正式文档未被阻断。")
+
+    checks += 1
+    code, output = run([sys.executable, "-X", "utf8", str(document_validator), str(reference_doc)])
+    if code or "编号存在缺口" in output or "WARN:" in output:
+        failures.append(f"跨文档规则引用被误判为本文编号缺口：{output}")
+
+    checks += 1
+    code, output = run([sys.executable, "-X", "utf8", str(document_validator), str(rule_gap_doc)])
+    if code or "WARN: [本文定义] R编号存在缺口：R-002" not in output:
+        failures.append(f"本文真实规则缺口未被分类提示：{output}")
 
     checks += 1
     code, output = run([sys.executable, "-X", "utf8", str(prototype_validator), str(valid_html)])
@@ -162,6 +218,9 @@ def main() -> int:
     code, output = run([sys.executable, "-X", "utf8", str(prototype_validator), str(admin_html)])
     if code or "WARN:" in output:
         failures.append(f"NG-ZORRO 后台模板未干净通过：{output}")
+
+    checks += 1
+    check_preview_server(preview_server, valid_html, failures)
 
     if failures:
         print(f"Regression checks: {checks}, failures: {len(failures)}")
