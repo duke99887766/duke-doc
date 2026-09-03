@@ -155,6 +155,40 @@ def find_deprecated_rules(content: str) -> set[str]:
     return deprecated
 
 
+def second_level_headings(content: str) -> list[str]:
+    headings: list[str] = []
+    fence_char = ""
+    for line in content.splitlines():
+        stripped = line.lstrip()
+        fence_match = re.match(r"(`{3,}|~{3,})", stripped)
+        if fence_char:
+            if fence_match and fence_match.group(1)[0] == fence_char:
+                fence_char = ""
+            continue
+        if fence_match:
+            fence_char = fence_match.group(1)[0]
+            continue
+        heading_match = re.match(r"^##(?!#)\s+(.+?)\s*$", line)
+        if heading_match:
+            headings.append(heading_match.group(1).strip())
+    return headings
+
+
+def normalize_heading_title(title: str) -> str:
+    return re.sub(r"^\d+(?:\.\d+)*(?:[.、]|\s)+", "", title).strip()
+
+
+def check_update_record_position(content: str, warnings: list[str]) -> None:
+    headings = second_level_headings(content)
+    update_indexes = [
+        index for index, heading in enumerate(headings) if normalize_heading_title(heading) == "更新记录"
+    ]
+    if len(update_indexes) > 1:
+        warnings.append("[结构顺序] 更新记录只应保留一个二级章节。")
+    if update_indexes and update_indexes[-1] != len(headings) - 1:
+        warnings.append("[结构顺序] 更新记录应位于最后一个二级章节。")
+
+
 def read_prototype_rules(path: Path, warnings: list[str]) -> set[str]:
     try:
         html = path.read_text(encoding="utf-8-sig")
@@ -307,6 +341,8 @@ def main() -> int:
             and not is_quick_acceptance_link
         ):
             warnings.append(f"[规则追溯] 第 {line_number} 行的验收编号未在同一行引用规则编号。")
+
+    check_update_record_position(content, warnings)
 
     repo_root = args.repo_root.resolve() if args.repo_root else path.parent
     check_links(path, content, repo_root, warnings)

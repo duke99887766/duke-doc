@@ -139,6 +139,12 @@ def main() -> int:
             "研发快速入口",
             "Frontmatter",
             "唯一规范性文档",
+            "更新记录统一放在正文最后",
+        ],
+        SKILLS / "duke-write-spec" / "references" / "spec-contracts.md": [
+            "更新记录不参与首屏结构，统一放在正文最后",
+            "如用户要求版本化或既有文档已维护更新记录",
+            "## 8. 更新记录",
         ],
         SKILLS / "duke-build-requirement-prototype" / "SKILL.md": [
             "data-requirement-id",
@@ -177,6 +183,7 @@ def main() -> int:
     fixtures = ROOT / "evals" / "fixtures"
     valid_doc = fixtures / "valid-requirement.md"
     invalid_doc = fixtures / "invalid-requirement.md"
+    invalid_update_position_doc = fixtures / "invalid-update-record-position.md"
     reference_doc = fixtures / "valid-rule-reference.md"
     rule_gap_doc = fixtures / "invalid-rule-gap.md"
     valid_html = fixtures / "valid-prototype.html"
@@ -186,13 +193,20 @@ def main() -> int:
 
     checks += 1
     code, output = run([sys.executable, "-X", "utf8", str(document_validator), str(valid_doc), "--require-frontmatter"])
-    if code:
+    if code or "WARN:" in output:
         failures.append(f"合法需求文档未通过：{output}")
 
     checks += 1
     code, _ = run([sys.executable, "-X", "utf8", str(document_validator), str(invalid_doc), "--require-frontmatter"])
     if code == 0:
         failures.append("缺失需求字段的正式文档未被阻断。")
+
+    checks += 1
+    code, output = run(
+        [sys.executable, "-X", "utf8", str(document_validator), str(invalid_update_position_doc), "--require-frontmatter"]
+    )
+    if code or "WARN: [结构顺序] 更新记录应位于最后一个二级章节。" not in output:
+        failures.append(f"更新记录位置错误未被分类提示：{output}")
 
     checks += 1
     code, output = run([sys.executable, "-X", "utf8", str(document_validator), str(reference_doc)])
