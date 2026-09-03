@@ -1,4 +1,4 @@
 interface:
   display_name: "Duke Doc"
-  short_description: "编排需求账本、数据验证、原型、验收、产品文档和资产同步流程"
-  default_prompt: "使用 $duke-doc 编排需求澄清、数据与原型验证、状态账本、文档输出和跨资产同步。"
+  short_description: "按需编排多阶段需求与跨资产同步"
+  default_prompt: "使用 $duke-doc 按需编排两个及以上需求阶段或 C2 规则的跨资产同步。"

@@ -1,4 +1,4 @@
 interface:
   display_name: "Duke 文档输出"
-  short_description: "将已确认需求整理为正式产品文档并同步、校验关联资产"
-  default_prompt: "使用 $duke-write-spec 将已确认需求整理为正式产品文档，并同步和校验授权范围内的关联资产。"
+  short_description: "按需增量输出并校验产品文档"
+  default_prompt: "使用 $duke-write-spec 将已确认需求按本轮增量整理为合适等级的产品文档。"

@@ -1,4 +1,4 @@
 interface:
   display_name: "Duke 文档评审"
-  short_description: "评审产品文档的规则完整性、历史兼容、阶段边界和验收追溯"
-  default_prompt: "使用 $duke-review-spec 评审这份产品文档的完整性、历史兼容和验收可追溯性。"
+  short_description: "按风险增量评审产品文档"
+  default_prompt: "使用 $duke-review-spec 按本轮变化和风险评审这份产品文档。"

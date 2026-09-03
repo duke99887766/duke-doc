@@ -39,6 +39,13 @@ def assert_contains(path: Path, phrases: list[str], failures: list[str]) -> None
             failures.append(f"{path.relative_to(ROOT)} 缺少契约关键词：{phrase}")
 
 
+def assert_not_contains(path: Path, phrases: list[str], failures: list[str]) -> None:
+    content = path.read_text(encoding="utf-8-sig")
+    for phrase in phrases:
+        if phrase in content:
+            failures.append(f"{path.relative_to(ROOT)} 仍包含应移除的全量执行指令：{phrase}")
+
+
 def assert_clean_utf8(path: Path, failures: list[str]) -> None:
     content = path.read_text(encoding="utf-8-sig")
     if "�" in content:
@@ -133,6 +140,9 @@ def main() -> int:
             "原型",
             "C0 视觉微调",
             "任务内恢复包",
+            "不要默认完整读取全部参考文件",
+            "普通 L1/L2 不自动全面评审",
+            "不超过 20 行",
         ],
         SKILLS / "duke-write-spec" / "SKILL.md": [
             "check_requirement_docs.py",
@@ -140,11 +150,21 @@ def main() -> int:
             "Frontmatter",
             "唯一规范性文档",
             "更新记录统一放在正文最后",
+            "不要同时读取不相关的 L1 与 L2/L3 模板",
+            "一轮批量写入",
         ],
         SKILLS / "duke-write-spec" / "references" / "spec-contracts.md": [
             "更新记录不参与首屏结构，统一放在正文最后",
-            "如用户要求版本化或既有文档已维护更新记录",
-            "## 8. 更新记录",
+            "README 索引、Frontmatter 和原型入口维护属于同一文档阶段",
+            "一轮批量写入完成后",
+        ],
+        SKILLS / "duke-write-spec" / "references" / "spec-l1.md": [
+            "如用户明确要求版本化或既有文档已维护更新记录",
+            "## 4. 验收标准",
+        ],
+        SKILLS / "duke-write-spec" / "references" / "workspace-sync.md": [
+            "README 索引、Frontmatter 和正文首屏研发快速入口属于同一文档阶段",
+            "verify-workspace.ps1 -ChangedOnly",
         ],
         SKILLS / "duke-build-requirement-prototype" / "SKILL.md": [
             "data-requirement-id",
@@ -153,6 +173,19 @@ def main() -> int:
             "admin-ng-zorro-prototype.html",
             "布局微调模式",
             "preview_prototype.py",
+            "完成一轮批量 HTML 修改后执行一次",
+        ],
+        SKILLS / "duke-write-acceptance" / "SKILL.md": [
+            "只提取本轮新增或变化的业务规则",
+            "不重复生成已有场景",
+        ],
+        SKILLS / "duke-review-spec" / "SKILL.md": [
+            "增量修订先评审本轮变化及直接上下游",
+            "升级全文评审",
+        ],
+        SKILLS / "duke-interview-requirement" / "references" / "full-requirement-package.md": [
+            "仅在阶段收口、完整盘点或跨任务交接时使用",
+            "# 结构化需求包",
         ],
         SKILLS / "duke-build-requirement-prototype" / "references" / "ng-zorro-admin-patterns.md": [
             "ng-zorro-antd@18.2.x",
@@ -166,11 +199,20 @@ def main() -> int:
             "C2 业务规则变更",
             "唯一规范性文档",
             "preview_prototype.py",
+            "README 索引、Frontmatter 和原型入口属于文档阶段配套资产",
         ],
     }
     for path, phrases in contracts.items():
         checks += len(phrases)
         assert_contains(path, phrases, failures)
+
+    forbidden_contracts = {
+        SKILLS / "duke-doc" / "SKILL.md": ["正式执行前完整读取", "默认主链路"],
+        SKILLS / "duke-build-requirement-prototype" / "SKILL.md": ["每次创建或修改HTML后执行"],
+    }
+    for path, phrases in forbidden_contracts.items():
+        checks += len(phrases)
+        assert_not_contains(path, phrases, failures)
 
     prototype_openai_yaml = SKILLS / "duke-build-requirement-prototype" / "agents" / "openai.yaml"
     checks += 3

@@ -18,7 +18,7 @@
 
 ## 使用方式
 
-- 端到端处理：使用 `$duke-doc`。
+- 端到端处理、两个及以上独立阶段或 C2 规则跨资产传播：使用 `$duke-doc`。
 - 单独梳理需求：使用 `$duke-interview-requirement`。
 - 使用Excel、CSV或历史明细验证需求：使用 `$duke-analyze-requirement-data`。
 - 制作或更新浏览器可预览的需求原型：使用 `$duke-build-requirement-prototype`。
@@ -29,6 +29,8 @@
 - 需要将竞品、行业、规则或技术网页沉淀为研究笔记：使用 `$duke-capture-web-research`。
 
 各 Skill 的 `description` 已定义自动触发边界，日常自然语言请求也可以自动匹配。
+
+单份文档及其 README 索引、Frontmatter、原型入口维护仍属于文档阶段，不因涉及多个文件自动升级为 `$duke-doc`。各 Skill 默认按本轮增量执行，参考契约按任务类型读取；一轮批量修改后执行专项校验和一次 `ChangedOnly`，阶段收口时再运行全量校验。
 
 ## 安装
 

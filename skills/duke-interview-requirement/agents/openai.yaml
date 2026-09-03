@@ -1,4 +1,4 @@
 interface:
   display_name: "Duke 需求访谈"
-  short_description: "通过多轮或批量对话维护需求状态账本并持续收敛业务规则"
-  default_prompt: "使用 $duke-interview-requirement 将需求和数据发现整理为带稳定编号的结构化需求包。"
+  short_description: "只针对实现分歧收敛需求规则"
+  default_prompt: "使用 $duke-interview-requirement 针对会改变实现结果的缺口批量确认需求规则。"
